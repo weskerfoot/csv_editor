@@ -32,9 +32,6 @@ main :: proc() {
 		}
 	}
 
-  for f in csv_fields {
-		fmt.printfln("field: %v", f)
-  }
 
   fields_per_record := r.fields_per_record
   num_fields := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
@@ -43,30 +40,45 @@ main :: proc() {
   screenHeight :i32 = 800
   raylib.InitWindow(screenWidth, screenHeight, "CSV Viewer")
 
-  baseColWidth :i32 = 100
+  baseColWidth :i32 = 10
   maxFieldLength :i32 = 0
   charSize :i32 = 20
+
+  panelRec: raylib.Rectangle = {10, 10, 1500, 1500}
+  panelContentRec :raylib.Rectangle = {0, 0, 2000, 2000}
+  panelView :raylib.Rectangle
+  panelScroll :raylib.Vector2 = {0, 0}
 
   for !raylib.WindowShouldClose() {
     raylib.BeginDrawing()
     raylib.ClearBackground(raylib.RAYWHITE)
 
+    raylib.BeginScissorMode(cast(i32)panelView.x, cast(i32)panelView.y, cast(i32)panelView.width, cast(i32)panelView.height);
+    raylib.GuiScrollPanel(panelRec,
+                          nil,
+                          panelContentRec,
+                          &panelScroll,
+                          &panelView)
 
     for i := 0; i < (num_fields-fields_per_record); i += (fields_per_record) {
       col_num := 1
+      rowOffset :i32 = cast(i32)i * charSize/2.0
+
       for j := i; j < (i+fields_per_record); j += 1 {
         f := csv_fields[j]
         maxFieldLength = cast(i32)max(cast(int)maxFieldLength,
                                       cast(int)raylib.MeasureText(f, charSize))
 
+
         raylib.DrawText(raylib.TextFormat("%s", f),
-                        (baseColWidth)*(cast(i32)col_num) + (maxFieldLength * cast(i32)col_num),
-                        (cast(i32)i+1)*charSize,
+                        cast(i32)panelRec.x + cast(i32)panelScroll.x + (cast(i32)col_num) + (maxFieldLength * cast(i32)col_num),
+                        cast(i32)panelRec.y + cast(i32)panelScroll.y + charSize + rowOffset,
                         charSize,
                         raylib.RED)
         col_num += 1
       }
     }
+    raylib.EndScissorMode()
 
     raylib.EndDrawing()
   }
