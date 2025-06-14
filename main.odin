@@ -38,6 +38,8 @@ main :: proc() {
   displayHeight := xlib.DisplayHeight(display, 0)
   displayWidth := xlib.DisplayWidth(display, 0)
 
+  defer xlib.CloseDisplay(display)
+
   fields_per_record := r.fields_per_record
   num_fields := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
 
@@ -48,7 +50,7 @@ main :: proc() {
   charSize :i32 = 20
 
   panelRec: raylib.Rectangle = {20, 20, cast(f32)displayWidth-100, cast(f32)displayHeight-100}
-  panelContentRec :raylib.Rectangle = {0, 0, 1920, cast(f32)(charSize*4*cast(i32)r.line_count)}
+  panelContentRec :raylib.Rectangle = {0, 0, cast(f32)displayWidth, cast(f32)(charSize*4*cast(i32)r.line_count)}
   panelView :raylib.Rectangle
   panelScroll :raylib.Vector2 = {0, 0}
 
