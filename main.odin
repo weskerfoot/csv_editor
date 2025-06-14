@@ -5,6 +5,7 @@ import "core:fmt"
 import "core:encoding/csv"
 import "core:os"
 import "vendor:raylib"
+import "vendor:x11/xlib"
 
 main :: proc() {
 	r: csv.Reader
@@ -33,19 +34,21 @@ main :: proc() {
 	}
 
 
+  display := xlib.OpenDisplay(nil)
+  displayHeight := xlib.DisplayHeight(display, 0)
+  displayWidth := xlib.DisplayWidth(display, 0)
+
   fields_per_record := r.fields_per_record
   num_fields := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
 
-  screenWidth :i32 = 800
-  screenHeight :i32 = 800
-  raylib.InitWindow(screenWidth, screenHeight, "CSV Viewer")
+  raylib.InitWindow(displayWidth, displayHeight, "CSV Viewer")
 
   baseColWidth :i32 = 10
   maxFieldLength :i32 = 0
   charSize :i32 = 20
 
-  panelRec: raylib.Rectangle = {10, 10, 1500, 1500}
-  panelContentRec :raylib.Rectangle = {0, 0, 2000, 2000}
+  panelRec: raylib.Rectangle = {20, 20, cast(f32)displayWidth-100, cast(f32)displayHeight-100}
+  panelContentRec :raylib.Rectangle = {0, 0, 1920, cast(f32)(charSize*4*cast(i32)r.line_count)}
   panelView :raylib.Rectangle
   panelScroll :raylib.Vector2 = {0, 0}
 
@@ -53,14 +56,18 @@ main :: proc() {
     raylib.BeginDrawing()
     raylib.ClearBackground(raylib.RAYWHITE)
 
-    raylib.BeginScissorMode(cast(i32)panelView.x, cast(i32)panelView.y, cast(i32)panelView.width, cast(i32)panelView.height);
     raylib.GuiScrollPanel(panelRec,
                           nil,
                           panelContentRec,
                           &panelScroll,
                           &panelView)
 
-    for i := 0; i < (num_fields-fields_per_record); i += (fields_per_record) {
+    raylib.BeginScissorMode(cast(i32)panelView.x,
+                            cast(i32)panelView.y,
+                            cast(i32)panelView.width,
+                            cast(i32)panelView.height);
+
+    for i := 0; i < (num_fields-fields_per_record); i += fields_per_record {
       col_num := 1
       rowOffset :i32 = cast(i32)i * charSize/2.0
 
@@ -71,7 +78,7 @@ main :: proc() {
 
 
         raylib.DrawText(raylib.TextFormat("%s", f),
-                        cast(i32)panelRec.x + cast(i32)panelScroll.x + (cast(i32)col_num) + (maxFieldLength * cast(i32)col_num),
+                        cast(i32)panelRec.x + cast(i32)panelScroll.x + (cast(i32)col_num) + (maxFieldLength * cast(i32)col_num*2),
                         cast(i32)panelRec.y + cast(i32)panelScroll.y + charSize + rowOffset,
                         charSize,
                         raylib.RED)
