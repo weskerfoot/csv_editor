@@ -8,13 +8,19 @@ import "vendor:raylib"
 import "vendor:x11/xlib"
 
 main :: proc() {
+  display := xlib.OpenDisplay(nil)
+  displayHeight := xlib.DisplayHeight(display, 0)
+  displayWidth := xlib.DisplayWidth(display, 0)
+
+  defer xlib.CloseDisplay(display)
+
 	r: csv.Reader
 	r.trim_leading_space  = true
   r.reuse_record = true
   r.reuse_record_buffer = true
 	defer csv.reader_destroy(&r)
 
-  filename: string = "./test.csv"
+  filename: string = os.args[1]
   handle, err := os.open(filename)
 
   if err != nil {
@@ -27,27 +33,36 @@ main :: proc() {
 
   csv.reader_init(&r, os.stream_from_handle(handle))
 
+  maxFieldLength :[dynamic]i32
+  charSize :i32 = 20
+
+  raylib.InitWindow(displayWidth, displayHeight, "CSV Viewer")
+
 	for r, i in csv.iterator_next(&r) {
 		for f, j in r {
-      append(&csv_fields, strings.clone_to_cstring(f))
+      cloned_st := strings.clone_to_cstring(f)
+      append(&csv_fields, cloned_st)
+
+      if len(maxFieldLength) <= j {
+        append(&maxFieldLength, 0)
+      }
+
+      maxFieldLength[j] = cast(i32)max(cast(int)maxFieldLength[j],
+                                       cast(int)raylib.MeasureText(cloned_st, charSize))
+
+      assert(maxFieldLength[j] > 0)
 		}
 	}
 
-
-  display := xlib.OpenDisplay(nil)
-  displayHeight := xlib.DisplayHeight(display, 0)
-  displayWidth := xlib.DisplayWidth(display, 0)
-
-  defer xlib.CloseDisplay(display)
+  for i := 0; i < len(maxFieldLength); i += 1 {
+    fmt.printf("%v\n", maxFieldLength[i])
+  }
+  //assert(false)
 
   fields_per_record := r.fields_per_record
   num_fields := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
 
-  raylib.InitWindow(displayWidth, displayHeight, "CSV Viewer")
-
   baseColWidth :i32 = 10
-  maxFieldLength :i32 = 0
-  charSize :i32 = 20
 
   panelRec: raylib.Rectangle = {20, 20, cast(f32)displayWidth-100, cast(f32)displayHeight-100}
   panelContentRec :raylib.Rectangle = {0, 0, cast(f32)displayWidth, cast(f32)(charSize*4*cast(i32)r.line_count)}
@@ -73,19 +88,23 @@ main :: proc() {
       col_num := 1
       rowOffset :i32 = cast(i32)i * charSize/2.0
 
+      current_x_pos :i32 = 0
       for j := i; j < (i+fields_per_record); j += 1 {
         f := csv_fields[j]
-        maxFieldLength = cast(i32)max(cast(int)maxFieldLength,
-                                      cast(int)raylib.MeasureText(f, charSize))
+        current_x_pos += cast(i32)panelRec.x + cast(i32)panelScroll.x + maxFieldLength[col_num-1] * cast(i32)col_num
+        y_pos := cast(i32)panelRec.y + cast(i32)panelScroll.y + charSize + rowOffset
 
+        //fmt.printf("field = %v, size = %v\n", f, maxFieldLength[col_num-1])
+        //fmt.printf("x_pos = %v, y_pos = %v\n", current_x_pos, y_pos)
 
         raylib.DrawText(raylib.TextFormat("%s", f),
-                        cast(i32)panelRec.x + cast(i32)panelScroll.x + (cast(i32)col_num) + (maxFieldLength * cast(i32)col_num*2),
-                        cast(i32)panelRec.y + cast(i32)panelScroll.y + charSize + rowOffset,
+                        current_x_pos,
+                        y_pos,
                         charSize,
                         raylib.RED)
         col_num += 1
       }
+      //fmt.printf("\n")
     }
     raylib.EndScissorMode()
 
