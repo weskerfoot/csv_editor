@@ -20,7 +20,11 @@ main :: proc() {
   r.reuse_record_buffer = true
 	defer csv.reader_destroy(&r)
 
+  if len(os.args) < 2 {
+    fmt.panicf("Must pass in the name of a csv file, e.g. ./csv_viewer foo.csv")
+  }
   filename: string = os.args[1]
+
   handle, err := os.open(filename)
 
   if err != nil {
