@@ -58,11 +58,6 @@ main :: proc() {
 		}
 	}
 
-  for i := 0; i < len(maxFieldLength); i += 1 {
-    fmt.printf("%v\n", maxFieldLength[i])
-  }
-  //assert(false)
-
   fields_per_record := r.fields_per_record
   num_fields := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
 
@@ -98,9 +93,6 @@ main :: proc() {
         current_x_pos += cast(i32)panelRec.x + cast(i32)panelScroll.x + maxFieldLength[col_num-1] * cast(i32)col_num
         y_pos := cast(i32)panelRec.y + cast(i32)panelScroll.y + charSize + rowOffset
 
-        //fmt.printf("field = %v, size = %v\n", f, maxFieldLength[col_num-1])
-        //fmt.printf("x_pos = %v, y_pos = %v\n", current_x_pos, y_pos)
-
         raylib.DrawText(raylib.TextFormat("%s", f),
                         current_x_pos,
                         y_pos,
@@ -108,7 +100,6 @@ main :: proc() {
                         raylib.RED)
         col_num += 1
       }
-      //fmt.printf("\n")
     }
     raylib.EndScissorMode()
 
