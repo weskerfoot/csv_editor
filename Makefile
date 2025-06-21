@@ -2,7 +2,8 @@ build:
 	odin build .
 
 run:
-	odin run .
+	make build
+	./csv_viewer test.csv
 
 test:
 	odin test .
