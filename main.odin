@@ -59,9 +59,6 @@ main :: proc() {
 
 		}
 	}
-  for d in maxFieldLength {
-    fmt.println(d)
-  }
 
   fields_per_record := r.fields_per_record
   num_fields := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
