@@ -38,7 +38,7 @@ main :: proc() {
   csv.reader_init(&r, os.stream_from_handle(handle))
 
   maxFieldLength :[dynamic]i32
-  charSize :i32 = 20
+  charSize :i32 = 32
 
   raylib.InitWindow(displayWidth, displayHeight, "CSV Viewer")
 
@@ -52,20 +52,27 @@ main :: proc() {
         append(&maxFieldLength, 0)
       }
 
-      if (j > 0) {
+      if (j >= 0) {
         maxFieldLength[j+1] = cast(i32)max(cast(int)maxFieldLength[j+1],
                                            cast(int)raylib.MeasureText(cloned_st, charSize))
       }
-
 		}
 	}
 
+  total_width :i32 = 0
+  for l in maxFieldLength {
+    total_width += l
+  }
+
+  grid_spacing := charSize
+
   fields_per_record := r.fields_per_record
-  num_fields := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
+  num_records := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
 
   panelRec: raylib.Rectangle = {20, 20, cast(f32)displayWidth-100, cast(f32)displayHeight-100}
-  panelContentRec :raylib.Rectangle = {0, 0, cast(f32)displayWidth, cast(f32)(charSize*8*cast(i32)r.line_count)}
+  panelContentRec :raylib.Rectangle = {0, 0, cast(f32)displayWidth, cast(f32)(charSize*2*cast(i32)r.line_count)}
   panelView :raylib.Rectangle
+  gridRect :raylib.Rectangle
   panelScroll :raylib.Vector2 = {0, 0}
 
   for !raylib.WindowShouldClose() {
@@ -83,14 +90,30 @@ main :: proc() {
                             cast(i32)panelView.width,
                             cast(i32)panelView.height);
 
-    for i := 0; i < (num_fields-fields_per_record); i += fields_per_record {
+
+    current_x_pos :i32 = cast(i32)panelRec.x + cast(i32)panelScroll.x
+
+    for m in maxFieldLength[1:] {
+      raylib.DrawRectangle(current_x_pos - 5,
+                           cast(i32)panelRec.y + cast(i32)panelScroll.y,
+                           3,
+                           charSize * cast(i32)num_records,
+                           raylib.BLACK)
+
+      current_x_pos += cast(i32)panelRec.x + cast(i32)panelScroll.x + m + charSize*2
+    }
+
+    for i := 0; i < (num_records-fields_per_record); i += fields_per_record {
       col_num := 1
       rowOffset :i32 = cast(i32)i * charSize/2.0
+      y_pos :i32 = 0
 
       current_x_pos :i32 = cast(i32)panelRec.x + cast(i32)panelScroll.x
+
       for j := i; j < (i+fields_per_record); j += 1 {
         f := csv_fields[j]
-        y_pos := cast(i32)panelRec.y + cast(i32)panelScroll.y + charSize + rowOffset
+        y_pos = cast(i32)panelRec.y + cast(i32)panelScroll.y + charSize + rowOffset
+
 
         raylib.DrawText(raylib.TextFormat("%s", f),
                         current_x_pos,
@@ -101,6 +124,14 @@ main :: proc() {
         current_x_pos += cast(i32)panelRec.x + cast(i32)panelScroll.x + maxFieldLength[col_num] + charSize*2
         col_num += 1
       }
+
+      raylib.DrawRectangle(cast(i32)panelRec.x + cast(i32)panelScroll.x,
+                           y_pos + charSize + 1,
+                           cast(i32)current_x_pos,
+                           3,
+                           raylib.BLACK)
+
+
     }
     raylib.EndScissorMode()
 
