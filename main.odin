@@ -90,7 +90,6 @@ main :: proc() {
       current_x_pos :i32 = cast(i32)panelRec.x + cast(i32)panelScroll.x
       for j := i; j < (i+fields_per_record); j += 1 {
         f := csv_fields[j]
-        fmt.println(current_x_pos)
         y_pos := cast(i32)panelRec.y + cast(i32)panelScroll.y + charSize + rowOffset
 
         raylib.DrawText(raylib.TextFormat("%s", f),
