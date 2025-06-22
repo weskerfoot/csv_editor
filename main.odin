@@ -100,7 +100,7 @@ main :: proc() {
                            charSize * cast(i32)num_records,
                            raylib.BLACK)
 
-      current_x_pos += cast(i32)panelRec.x + cast(i32)panelScroll.x + m + charSize*2
+      current_x_pos += cast(i32)panelRec.x + m + charSize*2
     }
 
     for i := 0; i < (num_records-fields_per_record); i += fields_per_record {
@@ -121,7 +121,7 @@ main :: proc() {
                         charSize,
                         raylib.RED)
 
-        current_x_pos += cast(i32)panelRec.x + cast(i32)panelScroll.x + maxFieldLength[col_num] + charSize*2
+        current_x_pos += cast(i32)panelRec.x + maxFieldLength[col_num] + charSize*2
         col_num += 1
       }
 
