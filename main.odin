@@ -16,7 +16,7 @@ main :: proc() {
 
   r: csv.Reader
   //r.multiline_fields = true
-  //r.lazy_quotes = true
+  r.lazy_quotes = true
   r.trim_leading_space  = true
   r.reuse_record = true
   r.reuse_record_buffer = true
