@@ -14,6 +14,8 @@ main :: proc() {
   defer xlib.CloseDisplay(display)
 
   r: csv.Reader
+  //r.multiline_fields = true
+  //r.lazy_quotes = true
   r.trim_leading_space  = true
   r.reuse_record = true
   r.reuse_record_buffer = true
@@ -62,19 +64,26 @@ main :: proc() {
         measured := cast(int)raylib.MeasureText(cast(cstring)(&csv_field_strings[offset]), charSize)
         maxFieldLength[j+1] = cast(i32)max(cast(int)maxFieldLength[j+1], measured)
       }
-
       append(&csv_fields, CSVField{len(f) + 1, offset})
     }
   }
 
+  totalWidth :i32 = 0
+  for m in maxFieldLength {
+    totalWidth += m
+  }
 
   grid_spacing := charSize
-
   fields_per_record := r.fields_per_record
   num_records := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
 
   panelRec: raylib.Rectangle = {20, 20, cast(f32)displayWidth-100, cast(f32)displayHeight-100}
-  panelContentRec :raylib.Rectangle = {0, 0, cast(f32)displayWidth, cast(f32)(charSize*2*cast(i32)r.line_count)}
+  panelContentRec :raylib.Rectangle = {
+    0,
+    0,
+    cast(f32)totalWidth + cast(f32)(r.fields_per_record * cast(int)charSize * 3),
+    cast(f32)(charSize*2*cast(i32)r.line_count)
+  }
   panelView :raylib.Rectangle
   gridRect :raylib.Rectangle
   panelScroll :raylib.Vector2 = {0, 0}
