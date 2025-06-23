@@ -14,11 +14,11 @@ main :: proc() {
 
   defer xlib.CloseDisplay(display)
 
-	r: csv.Reader
-	r.trim_leading_space  = true
+  r: csv.Reader
+  r.trim_leading_space  = true
   r.reuse_record = true
   r.reuse_record_buffer = true
-	defer csv.reader_destroy(&r)
+  defer csv.reader_destroy(&r)
 
   if len(os.args) < 2 {
     fmt.panicf("Must pass in the name of a csv file, e.g. ./csv_viewer foo.csv")
@@ -43,8 +43,8 @@ main :: proc() {
   raylib.InitWindow(displayWidth, displayHeight, "CSV Viewer")
 
   append(&maxFieldLength, 0)
-	for r, i in csv.iterator_next(&r) {
-		for f, j in r {
+  for r, i in csv.iterator_next(&r) {
+    for f, j in r {
       cloned_st := strings.clone_to_cstring(f)
       append(&csv_fields, cloned_st)
 
@@ -56,8 +56,8 @@ main :: proc() {
         maxFieldLength[j+1] = cast(i32)max(cast(int)maxFieldLength[j+1],
                                            cast(int)raylib.MeasureText(cloned_st, charSize))
       }
-		}
-	}
+    }
+  }
 
   total_width :i32 = 0
   for l in maxFieldLength {
@@ -125,7 +125,7 @@ main :: proc() {
         col_num += 1
       }
 
-      raylib.DrawRectangle(cast(i32)panelRec.x + cast(i32)panelScroll.x,
+      raylib.DrawRectangle(cast(i32)panelRec.x,
                            y_pos + charSize + 1,
                            cast(i32)current_x_pos,
                            3,
