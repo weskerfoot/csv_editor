@@ -59,11 +59,6 @@ main :: proc() {
     }
   }
 
-  total_width :i32 = 0
-  for l in maxFieldLength {
-    total_width += l
-  }
-
   grid_spacing := charSize
 
   fields_per_record := r.fields_per_record
