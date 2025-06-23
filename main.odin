@@ -1,6 +1,5 @@
 package main
 
-import "core:strings"
 import "core:fmt"
 import "core:encoding/csv"
 import "core:os"
@@ -33,7 +32,13 @@ main :: proc() {
 
   defer os.close(handle)
 
-  csv_fields : [dynamic]cstring
+  CSVField :: struct {
+    size: int,
+    offset: int
+  }
+
+  csv_fields : #soa[dynamic]CSVField
+  csv_field_strings : [dynamic]u8
 
   csv.reader_init(&r, os.stream_from_handle(handle))
 
@@ -45,19 +50,23 @@ main :: proc() {
   append(&maxFieldLength, 0)
   for r, i in csv.iterator_next(&r) {
     for f, j in r {
-      cloned_st := strings.clone_to_cstring(f)
-      append(&csv_fields, cloned_st)
+      offset := len(csv_field_strings)
+      append(&csv_field_strings, f)
+      append(&csv_field_strings, 0)
 
       if len(maxFieldLength) <= j+1 {
         append(&maxFieldLength, 0)
       }
 
       if (j >= 0) {
-        maxFieldLength[j+1] = cast(i32)max(cast(int)maxFieldLength[j+1],
-                                           cast(int)raylib.MeasureText(cloned_st, charSize))
+        measured := cast(int)raylib.MeasureText(cast(cstring)(&csv_field_strings[offset]), charSize)
+        maxFieldLength[j+1] = cast(i32)max(cast(int)maxFieldLength[j+1], measured)
       }
+
+      append(&csv_fields, CSVField{len(f) + 1, offset})
     }
   }
+
 
   grid_spacing := charSize
 
@@ -106,7 +115,10 @@ main :: proc() {
       current_x_pos :i32 = cast(i32)panelRec.x + cast(i32)panelScroll.x
 
       for j := i; j < (i+fields_per_record); j += 1 {
-        f := csv_fields[j]
+        csv_field : CSVField = csv_fields[j]
+
+        f := cstring(&csv_field_strings[csv_field.offset])
+
         y_pos = cast(i32)panelRec.y + cast(i32)panelScroll.y + charSize + rowOffset
 
 
