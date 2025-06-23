@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import "core:encoding/csv"
 import "core:os"
+import "core:strconv"
 import "vendor:raylib"
 import "vendor:x11/xlib"
 
@@ -73,17 +74,18 @@ main :: proc() {
     totalWidth += m
   }
 
-  grid_spacing := charSize
   fields_per_record := r.fields_per_record
   num_records := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
+  base_font_size := raylib.GetFontDefault().baseSize
 
-  panelRec: raylib.Rectangle = {20, 20, cast(f32)displayWidth-100, cast(f32)displayHeight-100}
+  panelRec: raylib.Rectangle = {5, 5, cast(f32)displayWidth, cast(f32)displayHeight}
   panelContentRec :raylib.Rectangle = {
     0,
     0,
     cast(f32)totalWidth + cast(f32)(r.fields_per_record * cast(int)charSize * 3),
-    cast(f32)(charSize*2*cast(i32)r.line_count)
+    cast(f32)(base_font_size*4*cast(i32)r.line_count)
   }
+
   panelView :raylib.Rectangle
   gridRect :raylib.Rectangle
   panelScroll :raylib.Vector2 = {0, 0}
@@ -104,7 +106,8 @@ main :: proc() {
                             cast(i32)panelView.height);
 
 
-    current_x_pos :i32 = cast(i32)panelRec.x + cast(i32)panelScroll.x
+    row_num_width := raylib.MeasureText(raylib.TextFormat("%d", r.line_count), charSize)
+    current_x_pos :i32 = cast(i32)panelRec.x + cast(i32)panelScroll.x + row_num_width*2
 
     for m in maxFieldLength[1:] {
       raylib.DrawRectangle(current_x_pos - 5,
@@ -116,26 +119,43 @@ main :: proc() {
       current_x_pos += cast(i32)panelRec.x + m + charSize*2
     }
 
+    row_num := 0
+
     for i := 0; i < (num_records-fields_per_record); i += fields_per_record {
       col_num := 1
-      rowOffset :i32 = cast(i32)i * charSize/2.0
-      y_pos :i32 = 0
+      row_num += 1
+      rowOffset :i32 = cast(i32)row_num * base_font_size * 4
+      y_pos := cast(i32)panelRec.y + cast(i32)panelScroll.y + rowOffset
 
       current_x_pos :i32 = cast(i32)panelRec.x + cast(i32)panelScroll.x
+
+      // draw row number here
+      raylib.DrawText(raylib.TextFormat("%d", row_num),
+                      current_x_pos,
+                      y_pos,
+                      charSize,
+                      raylib.RED)
+
+      current_x_pos += cast(i32)panelRec.x + row_num_width*2
 
       for j := i; j < (i+fields_per_record); j += 1 {
         csv_field : CSVField = csv_fields[j]
 
         f := cstring(&csv_field_strings[csv_field.offset])
 
-        y_pos = cast(i32)panelRec.y + cast(i32)panelScroll.y + charSize + rowOffset
-
+        color :raylib.Color
+        if row_num == 1 {
+          color = raylib.RED
+        }
+        else {
+          color = raylib.BLACK
+        }
 
         raylib.DrawText(raylib.TextFormat("%s", f),
                         current_x_pos,
                         y_pos,
                         charSize,
-                        raylib.RED)
+                        color)
 
         current_x_pos += cast(i32)panelRec.x + maxFieldLength[col_num] + charSize*2
         col_num += 1
