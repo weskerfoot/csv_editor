@@ -75,7 +75,7 @@ main :: proc() {
   }
 
   fields_per_record := r.fields_per_record
-  num_records := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
+  num_fields := fields_per_record * r.line_count // this might be wrong for multiline CSVs?
   base_font_size := raylib.GetFontDefault().baseSize
 
   panelRec: raylib.Rectangle = {5, 5, cast(f32)displayWidth, cast(f32)displayHeight}
@@ -113,7 +113,7 @@ main :: proc() {
       raylib.DrawRectangle(current_x_pos - 5,
                            cast(i32)panelRec.y + cast(i32)panelScroll.y,
                            3,
-                           charSize * cast(i32)num_records,
+                           charSize * cast(i32)num_fields,
                            raylib.BLACK)
 
       current_x_pos += cast(i32)panelRec.x + m + charSize*2
@@ -121,7 +121,7 @@ main :: proc() {
 
     row_num := 0
 
-    for i := 0; i < (num_records-fields_per_record); i += fields_per_record {
+    for i := 0; i < (num_fields-fields_per_record); i += fields_per_record {
       col_num := 1
       row_num += 1
       rowOffset :i32 = cast(i32)row_num * base_font_size * 4
