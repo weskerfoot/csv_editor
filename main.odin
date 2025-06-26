@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:encoding/csv"
 import "core:os"
 import "core:strconv"
+import "core:math"
 import "vendor:raylib"
 import "vendor:x11/xlib"
 
@@ -119,9 +120,14 @@ main :: proc() {
       current_x_pos += cast(i32)panelRec.x + m + charSize*2
     }
 
-    row_num := 0
 
-    for i := 0; i < (num_fields-fields_per_record); i += fields_per_record {
+    row_start := cast(int)math.max(math.ceil(math.abs(cast(f32)panelScroll.y) / cast(f32)(base_font_size * 4)) - 4, 0)
+    rows_per_page := cast(int)math.ceil(panelView.height / (cast(f32)(base_font_size * 4)))
+    row_end := math.min((row_start + rows_per_page + 5)*fields_per_record, num_fields-fields_per_record)
+
+    row_num := row_start
+
+    for i := row_start*fields_per_record; i < row_end; i += fields_per_record {
       col_num := 1
       row_num += 1
       rowOffset :i32 = cast(i32)row_num * base_font_size * 4
